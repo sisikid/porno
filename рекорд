@@ -1,0 +1,53 @@
+import os
+import pickle
+
+
+
+# Файл для сохранения рекорда
+RECORD_FILE = "space_shooter_record.pkl"
+high_score = 0
+
+# Загрузка сохранённого рекорда
+if os.path.exists(RECORD_FILE):
+    try:
+        with open(RECORD_FILE, "rb") as f:
+            high_score = pickle.load(f)
+    except:
+        high_score = 0
+else:
+    high_score = 0
+
+
+
+# Дисплей для рекорда
+record_display = turtle.Turtle()
+record_display.color("gold")
+record_display.penup()
+record_display.hideturtle()
+record_display.goto(0, 260)
+
+
+
+def update_record_display():
+    record_display.clear()
+    record_display.write(f"🏆 РЕКОРД: {high_score}", align="center", font=("Courier", 16, "bold"))
+
+
+
+def update_score_display():
+    global high_score
+    score_display.clear()
+    score_display.write(f"Счёт: {score}", align="center", font=("Courier", 16, "normal"))
+    
+    # Проверка и обновление рекорда
+    if score > high_score:
+        high_score = score
+        update_record_display()
+        # Сохраняем рекорд в файл
+        with open(RECORD_FILE, "wb") as f:
+            pickle.dump(high_score, f)
+
+
+update_record_display()  # чтобы рекорд оставался виден
+
+update_record_display()
