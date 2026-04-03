@@ -1,0 +1,17 @@
+# ========== ДЕКОР: УЗОРЫ ИЗ КВАДРАТИКОВ ==========
+decor_turtles = []
+for _ in range(60):  # 60 квадратиков по всему экрану
+    decor = turtle.Turtle()
+    decor.shape("square")
+    decor.shapesize(0.3, 0.3)
+    decor.color(random.choice(["gray", "darkgray", "lightgray", "white"]))
+    decor.penup()
+    decor.speed(0)
+    x = random.randint(-380, 380)
+    y = random.randint(-280, 280)
+    decor.goto(x, y)
+    decor_turtles.append(decor)
+# =================================================
+for d in decor_turtles:
+        if random.random() < 0.02:
+            d.color(random.choice(["gray", "darkgray", "dim gray"]))
