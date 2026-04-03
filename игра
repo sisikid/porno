@@ -1,0 +1,252 @@
+import turtle
+import random
+
+# Настройки окна
+wn = turtle.Screen()
+wn.bgcolor("black")
+wn.title("Space Shooter - Плавное движение + Враги строго вниз")
+wn.setup(width=800, height=600)
+wn.tracer(0)
+
+# Переменные игры
+score = 0
+level = 1
+enemies_in_level = 5
+enemies_defeated = 0
+game_over = False
+
+# Класс игрока с плавным движением
+class Player(turtle.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.shape("triangle")
+        self.color("white")
+        self.penup()
+        self.speed(0)
+        self.goto(0, -250)
+        self.setheading(90)
+        self.velocity_x = 0  # скорость по X
+
+    def accelerate_left(self):
+        self.velocity_x = -4
+
+    def accelerate_right(self):
+        self.velocity_x = 4
+
+    def stop_left(self):
+        if self.velocity_x < 0:
+            self.velocity_x = 0
+
+    def stop_right(self):
+        if self.velocity_x > 0:
+            self.velocity_x = 0
+
+    def move(self):
+        new_x = self.xcor() + self.velocity_x
+        if -350 <= new_x <= 350:
+            self.setx(new_x)
+
+# Класс снаряда
+class Bullet(turtle.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.shape("circle")
+        self.color("yellow")
+        self.shapesize(0.5, 0.5)
+        self.penup()
+        self.speed(0)
+        self.goto(0, -240)
+        self.state = "ready"
+
+    def fire(self):
+        if self.state == "ready":
+            self.state = "fire"
+            self.goto(player.xcor(), player.ycor() + 10)
+            self.showturtle()
+
+    def move(self):
+        if self.state == "fire":
+            self.sety(self.ycor() + 6)
+            if self.ycor() > 280:
+                self.hideturtle()
+                self.state = "ready"
+
+# Класс врага (движется строго вниз)
+class Enemy(turtle.Turtle):
+    def __init__(self, x, y):
+        super().__init__()
+        self.shape("circle")
+        self.color("red")
+        self.shapesize(1.2, 1.2)
+        self.penup()
+        self.speed(0)
+        self.goto(x, y)
+
+    def move(self):
+        self.sety(self.ycor() - 1.5)  # медленное движение вниз
+
+# Класс меню перезапуска
+class RestartMenu:
+    def __init__(self):
+        self.writer = turtle.Turtle()
+        self.writer.hideturtle()
+        self.writer.penup()
+        self.active = False
+
+    def show(self):
+        self.active = True
+        self.writer.clear()
+        self.writer.color("white")
+        self.writer.goto(0, 50)
+        self.writer.write("GAME OVER", align="center", font=("Arial", 36, "bold"))
+        self.writer.goto(0, 0)
+        self.writer.write("Нажми R для перезапуска", align="center", font=("Arial", 18, "normal"))
+        self.writer.goto(0, -30)
+        self.writer.write("Нажми Q для выхода", align="center", font=("Arial", 18, "normal"))
+
+    def hide(self):
+        self.active = False
+        self.writer.clear()
+
+# Создание объектов
+player = Player()
+bullet = Bullet()
+restart_menu = RestartMenu()
+
+# Функции управления
+def move_left():
+    player.accelerate_left()
+
+def stop_left():
+    player.stop_left()
+
+def move_right():
+    player.accelerate_right()
+
+def stop_right():
+    player.stop_right()
+
+def fire():
+    bullet.fire()
+
+def restart_game():
+    global score, level, enemies_defeated, game_over, enemies
+    game_over = False
+    score = 0
+    level = 1
+    enemies_defeated = 0
+    restart_menu.hide()
+
+    for enemy in enemies:
+        enemy.hideturtle()
+        del enemy
+    enemies.clear()
+
+    create_enemies(level)
+
+    player.goto(0, -250)
+    bullet.hideturtle()
+    bullet.state = "ready"
+    update_score_display()
+    update_level_display()
+
+def quit_game():
+    wn.bye()
+
+# Функции отображения
+def update_score_display():
+    score_display.clear()
+    score_display.write(f"Счёт: {score}", align="center", font=("Courier", 16, "normal"))
+
+def update_level_display():
+    level_display.clear()
+    level_display.write(f"Уровень: {level}", align="center", font=("Courier", 16, "normal"))
+
+# Создание врагов (в ряд сверху)
+def create_enemies(level):
+    num_enemies = enemies_in_level + (level - 1) * 2
+    start_x = -50 * (num_enemies - 1) / 2
+    for i in range(num_enemies):
+        x = start_x + i * 50
+        y = random.randint(200, 250)
+        enemy = Enemy(x, y)
+        enemies.append(enemy)
+
+# Проверка столкновений
+def check_collisions():
+    global score, enemies_defeated, level, game_over, enemies
+    for enemy in enemies[:]:
+        # Попадание снаряда
+        if bullet.distance(enemy) < 20 and bullet.state == "fire":
+            bullet.hideturtle()
+            bullet.state = "ready"
+            enemy.hideturtle()
+            enemies.remove(enemy)
+            score += 10
+            enemies_defeated += 1
+            update_score_display()
+
+            # Если всех врагов убили
+            if len(enemies) == 0:
+                level += 1
+                enemies_defeated = 0
+                update_level_display()
+                create_enemies(level)
+            continue
+
+        # Столкновение игрока с врагом
+        if player.distance(enemy) < 25:
+            game_over = True
+            restart_menu.show()
+            return
+
+        # Враг ушёл за нижнюю границу
+        if enemy.ycor() < -300:
+            game_over = True
+            restart_menu.show()
+            return
+
+# Настройка управления
+wn.listen()
+wn.onkeypress(move_left, "a")
+wn.onkeypress(move_left, "Left")
+wn.onkeyrelease(stop_left, "a")
+wn.onkeyrelease(stop_left, "Left")
+wn.onkeypress(move_right, "d")
+wn.onkeypress(move_right, "Right")
+wn.onkeyrelease(stop_right, "d")
+wn.onkeyrelease(stop_right, "Right")
+wn.onkeypress(fire, "space")
+wn.onkeypress(restart_game, "r")
+wn.onkeypress(quit_game, "q")
+
+# Текст для отображения
+score_display = turtle.Turtle()
+score_display.color("white")
+score_display.penup()
+score_display.hideturtle()
+score_display.goto(-300, 260)
+
+level_display = turtle.Turtle()
+level_display.color("white")
+level_display.penup()
+level_display.hideturtle()
+level_display.goto(300, 260)
+
+enemies = []
+create_enemies(level)
+
+update_score_display()
+update_level_display()
+
+# Главный игровой цикл
+while True:
+    wn.update()
+    if not game_over:
+        player.move()
+        bullet.move()
+
+        for enemy in enemies:
+            enemy.move()
+
+        check_collisions()
