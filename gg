@@ -1,0 +1,11 @@
+# Создание врагов (разные цвета вперемешку)
+def create_enemies(level):
+    num_enemies = enemies_in_level + (level - 1) * 2
+    start_x = -50 * (num_enemies - 1) / 2
+    colors = ["red", "green", "yellow"]  # доступные цвета
+    for i in range(num_enemies):
+        x = start_x + i * 50
+        y = random.randint(200, 250)
+        chosen_color = random.choice(colors)
+        enemy = Enemy(x, y, chosen_color)
+        enemies.append(enemy)
